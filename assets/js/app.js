@@ -29,8 +29,8 @@ const Templating = (arr) => {
                             <p>${b.content}</p>
                         </div>
                         <div class="card-footer d-flex justify-content-between">
-                            <button class="btn btn-sm btn-success">Edit</button>
-                            <button class="btn btn-sm btn-danger">Remove</button>
+                            <button class="btn btn-sm btn-success" onclick = "onEdit(this)">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick = "onRemove(this)">Remove</button>
                         </div>
                     </div>
           
@@ -41,11 +41,11 @@ const Templating = (arr) => {
 
 }
 
-const CreateBlog = (obj,id) =>{
+const CreateBlog = (obj, id) => {
 
     let card = document.createElement("div");
 
-    card.id = id ; 
+    card.id = id;
 
     card.className = "card mb-4";
 
@@ -58,12 +58,46 @@ const CreateBlog = (obj,id) =>{
                             <p>${obj.content}</p>
                         </div>
                         <div class="card-footer d-flex justify-content-between">
-                            <button class="btn btn-sm btn-success">Edit</button>
-                            <button class="btn btn-sm btn-danger">Remove</button>
+                            <button class="btn btn-sm btn-success" onclick = "onEdit(this)">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick = "onRemove(this)">Remove</button>
                         </div>
     `;
 
     blogContainer.append(card);
+}
+
+const PatchData = (obj) => {
+
+    title.value = obj.title;
+    content.value = obj.content;
+    userId.value = obj.userId;
+
+    submitBtn.classList.add("d-none");
+    updateBtn.classList.remove("d-none");
+}
+
+const UIUpdate = (obj) => {
+
+    let card = document.getElementById(obj.id);
+
+    card.innerHTML = `
+      
+                        <div class="card-header">
+                            <h5>${obj.title}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>${obj.content}</p>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button class="btn btn-sm btn-success" onclick = "onEdit(this)">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick = "onRemove(this)">Remove</button>
+                        </div>
+         
+    `;
+
+    submitBtn.classList.remove("d-none");
+    updateBtn.classList.add("d-none");
+    blogForm.reset();
 }
 
 const CovertARR = (obj) => {
@@ -112,29 +146,78 @@ const FetchData = () => {
 
 FetchData();
 
-const onSubmit = (eve) => {
+const onEdit = (ele) => {
 
-    eve.preventDefault();
+    let EDIT_ID = ele.closest(".card").id;
 
-    let blogObj = {
+    let EDIT_URL = `${BaseURL}/blogs/${EDIT_ID}.json`;
+
+    localStorage.setItem("EDIT_ID", EDIT_ID);
+
+    let xhr = new XMLHttpRequest();
+
+    xhr.open("GET", EDIT_URL);
+
+    xhr.send(null);
+
+    xhr.onload = function () {
+
+        if (xhr.status >= 200 && xhr.status <= 299) {
+
+            PatchData(JSON.parse(xhr.response));
+
+            let card = document.getElementById(EDIT_ID);
+
+            let btn = card.querySelector(".btn-danger");
+
+            if (btn) btn.classList.add("d-none");
+
+            blogForm.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        }
+        else {
+
+            console.error(xhr.status);
+        }
+    }
+
+    xhr.onerror = function () {
+
+        console.error("netwrok error");
+    }
+}
+
+const onUpdate = () => {
+
+    let UPDATE_ID = localStorage.getItem("EDIT_ID");
+
+    let UPDATE_URL = `${BaseURL}/blogs/${UPDATE_ID}.json`;
+
+    let UPDATE_OBJ = {
 
         title: title.value,
-        content : content.value,
-        userId : userId.value
-
+        content: content.value,
+        userId: userId.value,
+        id: UPDATE_ID
     }
 
     let xhr = new XMLHttpRequest();
 
-    xhr.open("POST",PostUrl);
+    xhr.open("PATCH", UPDATE_URL);
 
-    xhr.send(JSON.stringify(blogObj));
+    xhr.send(JSON.stringify(UPDATE_OBJ));
 
-    xhr.onload = function(){
+    xhr.onload = function () {
 
-        if(xhr.status >= 200 && xhr.status <= 299){
+        if (xhr.status >= 200 && xhr.status < 300) {
 
-            CreateBlog(blogObj,JSON.parse(xhr.response).id); 
+            UIUpdate(UPDATE_OBJ);
+
+            let card = document.getElementById(UPDATE_ID);
+
+            card.scrollIntoView({ behavior: "smooth", block: "center" });
+            card.classList.add("cardScrolle");
+            setTimeout(() => card.classList.remove("cardScrolle"), 1600);
         }
         else{
 
@@ -148,4 +231,41 @@ const onSubmit = (eve) => {
     }
 }
 
+const onSubmit = (eve) => {
+
+    eve.preventDefault();
+
+    let blogObj = {
+
+        title: title.value,
+        content: content.value,
+        userId: userId.value
+
+    }
+
+    let xhr = new XMLHttpRequest();
+
+    xhr.open("POST", PostUrl);
+
+    xhr.send(JSON.stringify(blogObj));
+
+    xhr.onload = function () {
+
+        if (xhr.status >= 200 && xhr.status <= 299) {
+
+            CreateBlog(blogObj, JSON.parse(xhr.response).id);
+        }
+        else {
+
+            console.error(xhr.status);
+        }
+    }
+
+    xhr.onerror = function () {
+
+        console.error("network error");
+    }
+}
+
 blogForm.addEventListener("submit", onSubmit);
+updateBtn.addEventListener("click", onUpdate);
