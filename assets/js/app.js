@@ -15,6 +15,28 @@ const BaseURL = "https://post-task-xhr-default-rtdb.firebaseio.com/";
 
 const PostUrl = "https://post-task-xhr-default-rtdb.firebaseio.com/blogs.json";
 
+const Loader = (flag) =>{
+
+    if(flag){
+
+        spinner.classList.remove("d-none");
+    }
+    else{
+
+        spinner.classList.add("d-none");
+    }
+}
+
+const SnackBar = (icon,msg) =>{
+
+    Swal.fire({
+
+        title : msg,
+        icon : icon,
+        timer : 1500
+    })
+}
+
 const Templating = (arr) => {
 
     let res = arr.map(b => {
@@ -42,6 +64,8 @@ const Templating = (arr) => {
 }
 
 const CreateBlog = (obj, id) => {
+
+    
 
     let card = document.createElement("div");
 
@@ -117,6 +141,8 @@ const CovertARR = (obj) => {
 
 const FetchData = () => {
 
+    Loader(true);
+
     let xhr = new XMLHttpRequest();
 
     xhr.open("GET", PostUrl);
@@ -131,6 +157,8 @@ const FetchData = () => {
             let data = CovertARR(JSON.parse(xhr.response));
 
             Templating(data);
+
+            Loader(false);
         }
         else {
 
@@ -141,12 +169,15 @@ const FetchData = () => {
     xhr.onerror = function () {
 
         console.error("network error");
+        Loader(false);
     }
 }
 
 FetchData();
 
 const onEdit = (ele) => {
+
+    Loader(true);
 
     let EDIT_ID = ele.closest(".card").id;
 
@@ -166,6 +197,8 @@ const onEdit = (ele) => {
 
             PatchData(JSON.parse(xhr.response));
 
+            Loader(false);
+            
             let card = document.getElementById(EDIT_ID);
 
             let btn = card.querySelector(".btn-danger");
@@ -184,10 +217,14 @@ const onEdit = (ele) => {
     xhr.onerror = function () {
 
         console.error("netwrok error");
+
+        Loader(false);
     }
 }
 
 const onUpdate = () => {
+
+    Loader(true);
 
     let UPDATE_ID = localStorage.getItem("EDIT_ID");
 
@@ -218,20 +255,75 @@ const onUpdate = () => {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
             card.classList.add("cardScrolle");
             setTimeout(() => card.classList.remove("cardScrolle"), 1600);
+
+             SnackBar("success","card Updated successfully");
+
+             Loader(false);
         }
-        else{
+        else {
 
             console.error(xhr.status);
         }
     }
 
-    xhr.onerror = function(){
+    xhr.onerror = function () {
 
         console.error("network error");
+
+        Loader(false);
     }
 }
 
+const onRemove = (ele) => {
+
+    Loader(true);
+
+    Swal.fire({
+        title: "Do you want to Delete movie ?",
+        showCancelButton: true,
+        confirmButtonText: "DELETE",
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            let REMOVE_ID = ele.closest(".card").id;
+
+            let REMOVE_URL = `${BaseURL}/blogs/${REMOVE_ID}.json`;
+
+            let xhr = new XMLHttpRequest();
+
+            xhr.open("DELETE", REMOVE_URL);
+
+            xhr.send(null);
+
+            xhr.onload = function () {
+
+                if (xhr.status >= 200 && xhr.status <= 299) {
+
+                    ele.closest(".card").remove();
+
+                    Loader(false);
+
+                    SnackBar("success","card deleted successfully");
+                }
+                else {
+
+                    console.error(xhr.status);
+                }
+            }
+
+            xhr.onerror = function () {
+
+                console.error("netwrok error");
+                Loader(false);
+            }
+
+        }
+    });
+}
+
 const onSubmit = (eve) => {
+
+    Loader(true);
 
     eve.preventDefault();
 
@@ -254,6 +346,8 @@ const onSubmit = (eve) => {
         if (xhr.status >= 200 && xhr.status <= 299) {
 
             CreateBlog(blogObj, JSON.parse(xhr.response).id);
+             SnackBar("success","card Added successfully");
+             Loader(false);
         }
         else {
 
@@ -264,6 +358,7 @@ const onSubmit = (eve) => {
     xhr.onerror = function () {
 
         console.error("network error");
+        Loader(false);
     }
 }
 
