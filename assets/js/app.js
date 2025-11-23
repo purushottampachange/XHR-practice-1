@@ -283,7 +283,7 @@ const onRemove = (ele) => {
         showCancelButton: true,
         confirmButtonText: "DELETE",
     }).then((result) => {
-        if (result.isConfirmed) {
+        if (result.isConfirmed){
 
             let REMOVE_ID = ele.closest(".card").id;
 
@@ -319,12 +319,12 @@ const onRemove = (ele) => {
             }
 
         }
-         else{
 
-            Loader(false);
-         }
-         
+        Loader(false);
+        
     });
+
+
 }
 
 const onSubmit = (eve) => {
