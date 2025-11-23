@@ -319,8 +319,11 @@ const onRemove = (ele) => {
             }
 
         }
+         else{
 
-         Loader(false);
+            Loader(false);
+         }
+         
     });
 }
 
