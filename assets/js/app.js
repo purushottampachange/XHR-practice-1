@@ -15,9 +15,9 @@ const BaseURL = "https://post-task-xhr-default-rtdb.firebaseio.com/";
 
 const PostUrl = "https://post-task-xhr-default-rtdb.firebaseio.com/blogs.json";
 
-const Templating = (arr) =>{
+const Templating = (arr) => {
 
-    let res = arr.map(b =>{
+    let res = arr.map(b => {
 
         return `
            
@@ -41,13 +41,38 @@ const Templating = (arr) =>{
 
 }
 
+const CreateBlog = (obj,id) =>{
+
+    let card = document.createElement("div");
+
+    card.id = id ; 
+
+    card.className = "card mb-4";
+
+    card.innerHTML = `
+      
+                        <div class="card-header">
+                            <h5>${obj.title}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>${obj.content}</p>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button class="btn btn-sm btn-success">Edit</button>
+                            <button class="btn btn-sm btn-danger">Remove</button>
+                        </div>
+    `;
+
+    blogContainer.append(card);
+}
+
 const CovertARR = (obj) => {
 
     let arr = [];
 
     for (const key in obj) {
-       
-        let data = {...obj[key], id : key}
+
+        let data = { ...obj[key], id: key }
 
         arr.push(data);
     }
@@ -67,11 +92,11 @@ const FetchData = () => {
     xhr.onload = function () {
 
         if (xhr.status >= 200 && xhr.status < 300) {
-             
-               
-              let data = CovertARR(JSON.parse(xhr.response));
 
-              Templating(data);
+
+            let data = CovertARR(JSON.parse(xhr.response));
+
+            Templating(data);
         }
         else {
 
@@ -86,3 +111,41 @@ const FetchData = () => {
 }
 
 FetchData();
+
+const onSubmit = (eve) => {
+
+    eve.preventDefault();
+
+    let blogObj = {
+
+        title: title.value,
+        content : content.value,
+        userId : userId.value
+
+    }
+
+    let xhr = new XMLHttpRequest();
+
+    xhr.open("POST",PostUrl);
+
+    xhr.send(JSON.stringify(blogObj));
+
+    xhr.onload = function(){
+
+        if(xhr.status >= 200 && xhr.status <= 299){
+
+            CreateBlog(blogObj,JSON.parse(xhr.response).id); 
+        }
+        else{
+
+            console.error(xhr.status);
+        }
+    }
+
+    xhr.onerror = function(){
+
+        console.error("network error");
+    }
+}
+
+blogForm.addEventListener("submit", onSubmit);
