@@ -308,6 +308,7 @@ const onRemove = (ele) => {
                 else {
 
                     console.error(xhr.status);
+                    Loader(false);
                 }
             }
 
